@@ -551,63 +551,97 @@
 
 <!-- datos generados -->
 <script defer src="js/app.min.js?v=025032c5a0"></script>
-<!-- === 深度診斷 + 全方位解鎖補丁 === -->
+<!-- === 終極精準全圖鑑 + 全天賦雙重注入補丁 === -->
 <script>
 (function() {
-    function runDiagnosticAndUnlock() {
-        if (!window.DB) return;
+    const MAX_LEVELS = {
+        vitality: 10, strength: 10, stride: 8, reflexes: 8,
+        armor: 8, synthesis: 5, magnet: 6, wisdom: 8,
+        fortune: 8, repertoire: 1, critical: 10, "critical hit": 10,
+        reroll: 5, "card reroll": 5, ban: 3
+    };
 
-        // 1. 取得全 966 隻寶可夢清單
-        const pList = window.POKEDEX || [];
-        const allIds = [];
+    function getDB() {
+        if (typeof DB !== 'undefined') return DB;
+        if (typeof db !== 'undefined') return db;
+        if (window.DB) return window.DB;
+        if (window.db) return window.db;
+        return null;
+    }
+
+    function doUnlock() {
+        const theDB = getDB();
+
+        // 建立全 966 隻寶可夢清單
+        const allDex = [];
         const allObj = {};
-
         for (let i = 1; i <= 966; i++) {
-            allIds.push(i);
+            allDex.push(i);
             allObj[i] = { normal: true, shiny: true, count: 99 };
             allObj[String(i)] = { normal: true, shiny: true, count: 99 };
         }
 
-        // 2. 獲取所有可能的存檔物件
-        const dbKeys = Object.keys(window.DB || {}).join(", ");
-        const target = DB.state || DB.data || DB.user || DB.player || DB.save || {};
-        const targetKeys = Object.keys(target).join(", ");
+        if (theDB) {
+            // 1. 強制攔截判定函數
+            theDB.hasPokemon = () => true;
+            theDB.hasShiny = () => true;
+            theDB.isUnlocked = () => true;
+            theDB.owns = () => true;
+            theDB.getCoins = () => 9999999;
+            theDB.getTickets = () => 99999;
+            theDB.getCollection = () => allDex;
+            theDB.getUpgradeLevel = (id) => MAX_LEVELS[id] || 10;
+            theDB.getUpgrades = () => MAX_LEVELS;
 
-        // 彈出診斷資訊，話你知內部真正結構
-        alert(
-            "【診斷資訊】\n" +
-            "DB 屬性: " + (dbKeys || "無") + "\n" +
-            "存檔內部屬性: " + (targetKeys || "無") + "\n" +
-            "POKEDEX 數量: " + (Array.isArray(pList) ? pList.length : typeof pList)
-        );
+            // 2. 灌滿所有可能的內部存檔物件
+            const targets = [theDB.state, theDB.data, theDB.save, theDB.user, theDB.player, theDB.guestState].filter(Boolean);
+            targets.forEach(d => {
+                d.coins = 9999999;
+                d.tickets = 99999;
+                d.collection = allDex;
+                d.shinies = allObj;
+                d.upgrades = d.upgrades || {};
+                for (const [k, v] of Object.entries(MAX_LEVELS)) d.upgrades[k] = v;
+            });
 
-        // 3. 全方位暴力注入（兼顧陣列與物件）
-        [DB.state, DB.data, DB.user, DB.player, DB.save, window.state, DB].filter(Boolean).forEach(d => {
-            d.coins = 9999999;
-            d.tickets = 99999;
-            d.collection = Array.isArray(d.collection) ? allIds : allObj;
-            d.shinies = allObj;
-            d.pokemon = allIds;
-        });
-
-        // 4. 強制覆蓋所有檢查函數
-        DB.hasPokemon = () => true;
-        DB.hasShiny = () => true;
-        DB.isUnlocked = () => true;
-        DB.owns = () => true;
-        DB.getCollection = () => allIds;
-
-        // 5. 如果連開局選夥伴都想全解鎖（解鎖 STARTERS）
-        if (window.STARTERS && Array.isArray(STARTERS) && Array.isArray(pList)) {
-            window.STARTERS = pList.map(p => p.dex || p.id || p);
+            if (typeof theDB.save === 'function') {
+                try { theDB.save(); } catch(e){}
+            }
         }
 
-        if (typeof DB.save === 'function') DB.save();
+        // 3. 直接掃描並改寫瀏覽器本地 localStorage 存檔
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                try {
+                    const val = JSON.parse(localStorage.getItem(k));
+                    if (val && typeof val === 'object') {
+                        if (val.collection || val.upgrades || val.coins !== undefined) {
+                            val.coins = 9999999;
+                            val.tickets = 99999;
+                            val.collection = allDex;
+                            val.upgrades = MAX_LEVELS;
+                            localStorage.setItem(k, JSON.stringify(val));
+                        }
+                    }
+                } catch(e){}
+            }
+        } catch(e){}
     }
 
-    // 點擊即執行
-    document.addEventListener('click', () => setTimeout(runDiagnosticAndUnlock, 100), true);
-    window.addEventListener('load', runDiagnosticAndUnlock);
+    // 頁面載入即執行並彈窗確認
+    window.addEventListener('load', () => {
+        doUnlock();
+        const theDB = getDB();
+        alert(theDB ? "【成功解鎖】已成功連接數據庫！全 966 隻精靈已全部注入！" : "【已注入】本地存檔已全滿！");
+    });
+
+    // 每次點擊（如 Play as guest）及定時持續守護
+    document.addEventListener('click', () => {
+        setTimeout(doUnlock, 100);
+        setTimeout(doUnlock, 400);
+    }, true);
+    setInterval(doUnlock, 1000);
 })();
 </script>
 
