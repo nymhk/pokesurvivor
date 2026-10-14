@@ -113,24 +113,23 @@ G.DB = (() => {
 
 
   /** Rellena campos que falten en partidas de versiones anteriores. */
-  function migrate(s, name) {
-    const base = newSave(name || s.name);
-    for (const k in base) if (s[k] == null) s[k] = base[k];
-    for (const k in base.stats) if (s.stats[k] == null) s.stats[k] = base.stats[k];
-    // v1 -> v2: había un único banner (Kanto) con el pity como número.
-    if (typeof s.pity === 'number') s.pity = { 1: s.pity };
-    // v2 -> v3: las mejoras eran de la cuenta; pasan al compañero de entonces.
-    if (!s.pupgDone) {
-      if (s.partner && Object.values(s.upgrades || {}).some(v => v > 0)) {
-        s.pupg[s.partner] = Object.assign({}, s.upgrades);
-      }
-      s.pupgDone = true;
-    }
-    s.tickets = Object.assign({ t1: 0, t10: 0 }, s.tickets);
-    sanitize(s);
-    s.v = VERSION;
-    return s;
-  }
+  /** Rellena campos que falten en partidas de versiones anteriores */
+function migrate(s, name) {
+  const base = newSave(name || s.name);
+  for (const k in base) if (s[k] == null) s[k] = base[k];
+  for (const k in base.stats) if (s.stats[k] == null) s.stats[k] = base.stats[k];
+
+  // === 強制將舊存檔同步為全圖鑑、全閃光、全天賦滿級 ===
+  s.owned = base.owned;
+  s.shiny = base.shiny;
+  s.pupg = base.pupg;
+  s.upgrades = base.upgrades;
+  s.coins = base.coins;
+  s.tickets = base.tickets;
+
+  // v1 -> v2: había un único banner (Kanto) con el pity
+  if (typeof s.pity === 'number') s.pity = { 1: s.pity };
+
 
   /**
    * Quita lo imposible de una partida editada a mano (la copia del navegador
