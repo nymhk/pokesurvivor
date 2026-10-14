@@ -551,9 +551,12 @@
 
 <!-- datos generados -->
 <script defer src="js/app.min.js?v=025032c5a0"></script>
-<!-- === 局外全圖鑑 + 局外13項天賦全滿補丁 === -->
+<!-- === 局外全圖鑑 + 局外13項天賦全滿（帶彈窗診斷） === -->
 <script>
 (function() {
+    // 1. 如果讀到新版，入遊戲即刻彈窗話你知
+    alert("【更新已生效】已成功載入全圖鑑與全天賦補丁！");
+
     const MAX_LEVELS = {
         vitality: 10, strength: 10, stride: 8, reflexes: 8,
         armor: 8, synthesis: 5, magnet: 6, wisdom: 8,
@@ -568,7 +571,7 @@
             ? POKEDEX.map(p => (p.dex !== undefined ? p.dex : (p.id !== undefined ? p.id : p)))
             : Array.from({ length: 966 }, (_, i) => i + 1);
 
-        // 1. 強制攔截判定函數
+        // 強制解鎖所有查詢函數
         DB.hasPokemon = () => true;
         DB.hasShiny = () => true;
         DB.isUnlocked = () => true;
@@ -578,7 +581,7 @@
         DB.getUpgradeLevel = (id) => MAX_LEVELS[id] || 10;
         DB.getUpgrades = () => MAX_LEVELS;
 
-        // 2. 灌滿所有內部存檔狀態
+        // 同步灌滿所有內部 state 物件
         const targets = [DB.state, DB.data, DB.save, DB.guestState, window.state].filter(Boolean);
         targets.forEach(data => {
             data.coins = 9999999;
@@ -596,16 +599,16 @@
         if (typeof DB.save === 'function') DB.save();
     }
 
-    // 每次點擊螢幕（特別係撳 Play as guest 或選單時）即刻觸發守護
     document.addEventListener('click', () => {
         setTimeout(applyFullUnlock, 50);
         setTimeout(applyFullUnlock, 300);
     }, true);
 
     window.addEventListener('load', applyFullUnlock);
-    setInterval(applyFullUnlock, 1000);
+    setInterval(applyFullUnlock, 500);
 })();
 </script>
+
 
 </body>
 </html>
