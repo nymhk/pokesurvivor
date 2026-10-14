@@ -1,6 +1,20 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script>
+// 強制註銷舊版 Service Worker 並清除舊代碼快取（僅執行一次）
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    for (let r of regs) r.unregister();
+  });
+}
+if ('caches' in window) {
+  caches.keys().then(keys => {
+    for (let k of keys) caches.delete(k);
+  });
+}
+</script>
+
 <meta charset="utf-8">
 <base href="../">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
