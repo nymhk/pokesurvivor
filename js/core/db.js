@@ -67,33 +67,50 @@ G.DB = (() => {
   // ---------------- partida ----------------
 
   function newSave(name) {
-    return {
-      v: VERSION,
-      name,
-      created: Date.now(),
-      updated: Date.now(),    // última modificación (para fusionar)
-      coins: START_COINS,
-      owned: {},              // dex -> { at, from: 'starter'|'gacha'|'wild' }
-      shiny: {},              // dex -> { at, from } — variantes shiny conseguidas
-      partner: null,          // dex del Pokémon con el que juegas
-      partnerShiny: false,    // jugar con su versión shiny (si la tienes)
-      starter: null,          // dex que te tocó en el test
-      personality: null,      // { trait, scores }
-      upgrades: {},           // (antiguo) mejoras de la cuenta; ahora van por Pokémon
-      pupg: {},               // dex -> { id -> nivel }: mejoras de cada Pokémon
-      tickets: { t1: 0, t10: 0 },   // tickets del gacha (x1 y x10)
-      pity: {},               // generación del banner -> tiradas sin ★5
-      legends: {},            // dex -> fecha: legendarios vencidos en grietas
-      arenas: {},             // tipo -> fecha: arenas de grieta ganadas
-      itemsFound: {},         // id -> fecha: objetos equipables encontrados
-      evoMoves: {},           // id -> fecha: movimientos evolucionados alguna vez
-      ach: {},                // id -> fecha: logros conseguidos
-      missions: {},           // misiones del día / semana (systems/progress.js)
-      profile: { favs: [], title: '' },   // perfil público: 3 favoritos y título
-      stats: { runs: 0, bestTime: 0, bestLevel: 0, totalKills: 0, pulls: 0, coinsEarned: 0, shinies: 0,
-               bossesTotal: 0, riftWins: 0, evolutions: 0, missionsDone: 0, groupRuns: 0, bestGroupTime: 0 }
-    };
+  // 自動生成全 966 隻精靈已擁有、全閃光、以及全天賦滿級
+  const allOwned = {};
+  const allShiny = {};
+  const maxUpgrades = {
+    vitality: 10, strength: 10, stride: 8, reflexes: 8,
+    armor: 8, synthesis: 5, magnet: 6, wisdom: 8,
+    fortune: 8, repertoire: 1, critical: 10, "critical hit": 10,
+    reroll: 5, "card reroll": 5, ban: 3
+  };
+  const allPupg = {};
+
+  for (let i = 1; i <= 966; i++) {
+    allOwned[i] = { at: Date.now(), from: 'starter' };
+    allShiny[i] = { at: Date.now(), from: 'starter' };
+    allPupg[i] = Object.assign({}, maxUpgrades);
   }
+
+  return {
+    v: VERSION,
+    name,
+    created: Date.now(),
+    updated: Date.now(),
+    coins: 9999999,
+    owned: allOwned,
+    shiny: allShiny,
+    partner: 25,
+    partnerShiny: false,
+    starter: 25,
+    personality: null,
+    upgrades: maxUpgrades,
+    pupg: allPupg,
+    tickets: { t1: 9999, t10: 9999 },
+    pity: {},
+    legends: {},
+    arenas: {},
+    itemsFound: {},
+    evoMoves: {},
+    ach: {},
+    missions: {},
+    profile: { favs: [], title: '' },
+    stats: { runs: 0, bestTime: 0, bestLevel: 0, totalKills: 0, bossesTotal: 0, riftWins: 0, evolutions: 0 },
+  };
+}
+
 
   /** Rellena campos que falten en partidas de versiones anteriores. */
   function migrate(s, name) {
